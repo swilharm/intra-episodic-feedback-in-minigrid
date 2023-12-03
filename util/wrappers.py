@@ -1,13 +1,10 @@
-from collections import defaultdict
+from typing import Dict
 
 import numpy as np
-from gymnasium import ObservationWrapper, Env, Space
+from gymnasium import ObservationWrapper, Env
 from gymnasium import spaces
 from gymnasium.core import ObsType
-from minigrid.wrappers import RGBImgPartialObsWrapper
-from stable_baselines3.common.vec_env import VecFrameStack, StackedObservations
-
-from envs.custom_env import CustomMiniGridEnv
+from minigrid.wrappers import RGBImgPartialObsWrapper, RGBImgObsWrapper
 
 # Word to index mapping
 W2I = dict()
@@ -18,15 +15,47 @@ I2W = dict()
 def apply_wrappers(env) -> Env:
     """Applies all three wrappers in order and returns resulting environment"""
     global W2I, I2W
-    env = RGBImgPartialObsWrapper(env, tile_size=8)
-    env = TextWrapper(env)
+    env = VisionWrapper(env)
+    env = LanguageWrapper(env)
     W2I = env.w2i
     I2W = {value: key for key, value in W2I.items()}
     env = DirectionWrapper(env)
     return env
 
 
-class TextWrapper(ObservationWrapper):
+class VisionWrapper(ObservationWrapper):
+    """Turns image into pixel space. Returns partial view of agent and full view with and without highlights."""
+
+    def __init__(self, env: Env):
+        super().__init__(env)
+        self.partial = RGBImgPartialObsWrapper(env)
+        self.full_with_highlight = RGBImgObsWrapper(env)
+        self.full_without_highlight = RGBImgObsWrapperNoHighlight(env)
+        self.observation_space = spaces.Dict(
+            {**self.observation_space.spaces,
+             "image": self.partial.observation_space.spaces['image'],
+             "overview": self.full_without_highlight.observation_space.spaces['image'],
+             "overview_highlighted": self.full_with_highlight.observation_space.spaces['image']}
+        )
+
+    def observation(self, obs: Dict[str, ObsType]) -> Dict[str, ObsType]:
+        partial = self.partial.observation(obs)['image']
+        full_with_highlight = self.full_with_highlight.observation(obs)['image']
+        full_without_highlight = self.full_without_highlight.observation(obs)['image']
+        return {**obs,
+                "image": partial,
+                "overview": full_without_highlight,
+                "overview_highlighted": full_with_highlight}
+
+
+class RGBImgObsWrapperNoHighlight(RGBImgObsWrapper):
+
+    def observation(self, obs: Dict[str, ObsType]) -> Dict[str, ObsType]:
+        rgb_img = self.get_frame(highlight=False, tile_size=self.tile_size)
+        return {**obs, "image": rgb_img}
+
+
+class LanguageWrapper(ObservationWrapper):
     """Applies index function to mission and turns it into a Box observation space"""
 
     def __init__(self, env: Env):
@@ -42,7 +71,7 @@ class TextWrapper(ObservationWrapper):
         for token in self.vocab:
             self.w2i[token] = len(self.w2i)
 
-    def observation(self, obs: Dict[ObsType]) -> Dict[ObsType]:
+    def observation(self, obs: Dict[str, ObsType]) -> Dict[str, ObsType]:
         mission = obs['mission']
         new_mission = []
         for token in mission.split():
@@ -62,5 +91,5 @@ class DirectionWrapper(ObservationWrapper):
         new_space = spaces.Box(low=0, high=3, shape=(1,), dtype=np.int8)
         env.observation_space = spaces.Dict({**env.observation_space.spaces, "direction": new_space})
 
-    def observation(self, obs: Dict[ObsType]) -> Dict[ObsType]:
+    def observation(self, obs: Dict[str, ObsType]) -> Dict[str, ObsType]:
         return {**obs, "direction": [obs['direction']]}

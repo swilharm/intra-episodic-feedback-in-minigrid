@@ -40,7 +40,7 @@ class CombinedFeaturesExtractor(BaseFeaturesExtractor):
 
         return (vision_embeddings + direction_embeddings) / 2
 
-    def __show_frames(self, observations: torch.Tensor):
+    def __show_frames(self, observations: torch.Tensor, view: str = "image"):
         """Displays the stacked observations with pyplot"""
         from util.wrappers import W2I, I2W
         I2W[0] = ''
@@ -49,13 +49,13 @@ class CombinedFeaturesExtractor(BaseFeaturesExtractor):
         axs: List[Axes]
         plt.sca(ax=axs[0])
         plt.gca().set_title(' '.join((I2W[int(idx)] for idx in observations['mission'][0][0:6])).strip())
-        plt.imshow(torch.permute(observations['image'][0][0:3], (1, 2, 0)))
+        plt.imshow(torch.permute(observations[view][0][0:3], (1, 2, 0)))
         plt.sca(ax=axs[1])
         plt.gca().set_title(' '.join((I2W[int(idx)] for idx in observations['mission'][0][6:12])).strip())
-        plt.imshow(torch.permute(observations['image'][0][3:6], (1, 2, 0)))
+        plt.imshow(torch.permute(observations[view][0][3:6], (1, 2, 0)))
         plt.sca(ax=axs[2])
         plt.gca().set_title(' '.join((I2W[int(idx)] for idx in observations['mission'][0][12:18])).strip())
-        plt.imshow(torch.permute(observations['image'][0][6:9], (1, 2, 0)))
+        plt.imshow(torch.permute(observations[view][0][6:9], (1, 2, 0)))
         fig.tight_layout()
         plt.show()
 

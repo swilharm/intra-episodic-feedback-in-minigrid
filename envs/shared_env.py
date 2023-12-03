@@ -1,23 +1,70 @@
-from typing import List
+from abc import abstractmethod
+from typing import Iterable, Tuple, Type, List, SupportsFloat, Any
 
+from gymnasium.core import ActType, ObsType
 from minigrid.core.constants import COLOR_NAMES
 from minigrid.core.grid import Grid
-from minigrid.core.world_object import Key, Ball, Wall
+from minigrid.core.mission import MissionSpace
+from minigrid.core.world_object import WorldObj, Key, Ball, Wall
+from minigrid.minigrid_env import MiniGridEnv
 
-from envs.custom_env import CustomMiniGridEnv
+from follower.follower import Follower
+from speaker.speaker import Speaker
 
 
-class CustomFetchEnv(CustomMiniGridEnv):
+class SharedEnv(MiniGridEnv):
 
-    def initial_mission_func(self, syntax, color, obj_type) -> str:
-        return f"{syntax} {color} {obj_type}"
+    def __init__(
+            self,
+            size: int = 6,
+            num_distractors: int = 2,
+            configs: List[dict] | None = None,
+            holdouts: Iterable[Tuple[str, str]] = (),
+            speaker: Type[Speaker] | None = None,
+            follower: Type[Follower] | None = None,
+            **kwargs
+    ):
+        """
+                :param size: Map size
+                :param num_distractors: Number of distractors
+                :param holdouts: List of holdout objects to not include when randomly generating
+                :param configs: Optional configs that override the random choices.
+                :param speaker: Speaker class
+                :param follower: Follower class
+                See child class _gen_grid() for details regarding what can be configured.
+                :param kwargs: Passed on to super init
+                """
 
-    def initial_mission_placeholders(self) -> List[List[str]]:
-        return [self.MISSION_SYNTAX, COLOR_NAMES, self.OBJ_TYPES]
+        self.size = size
+        self.num_distractors = num_distractors
+        self.holdouts = holdouts
 
-    @property
-    def MISSION_SYNTAX(self):
-        return ["get a", "go get a", "fetch a", "go fetch a", "you must fetch a"]
+        self.configs = configs
+        if configs is not None:
+            self._configs_iter = iter(configs)
+
+        self.speaker = speaker(self) if speaker else None
+        self.follower = follower(self) if follower else None
+
+        self.target: WorldObj | None = None
+        self.distractors: List[WorldObj] = []
+
+        self.initial_mission = ""
+        self.obs = None
+
+        mission_space = MissionSpace(
+            mission_func=lambda mission: mission,
+            ordered_placeholders=[self.speaker.list_possible_statements()]
+        )
+        super().__init__(mission_space=mission_space,
+                         grid_size=size,
+                         max_steps=5 * size,
+                         see_through_walls=True,
+                         **kwargs
+                         )
+
+    def initial_mission_func(self, color, obj_type) -> str:
+        return f"get the {color} {obj_type}"
 
     @property
     def OBJ_COLORS(self):
@@ -123,8 +170,7 @@ class CustomFetchEnv(CustomMiniGridEnv):
             self.place_agent()
 
         # Generate the mission string
-        instructions = self.initial_mission_placeholders()[0]
-        self.initial_mission = f"{self._rand_elem(instructions)} {self.target.color} {self.target.type}"
+        self.initial_mission = self.initial_mission_func(self.target.color, self.target.type)
         self.mission = ""
 
     def reject_fn(self, _, pos):
@@ -136,8 +182,24 @@ class CustomFetchEnv(CustomMiniGridEnv):
                     return True
         return False
 
-    def step(self, action):
-        obs, reward, terminated, truncated, info = super().step(action)
+    def make_follower_act(self) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+        assert self.follower is not None, "Can not query follower if self.follower is None"
+        action = self.follower.predict()
+        return self._step(action)
+
+    def make_speaker_act(self):
+        assert self.speaker is not None, "Can not query speaker if self.speaker is None"
+        statement = self.speaker.predict()
+        self.mission = statement
+
+    def act_as_follower(self, action: ActType) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+        return self._step(action)
+
+    def act_as_speaker(self, statement):
+        self.mission = statement
+
+    def _step(self, action: ActType) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+        self.obs, reward, terminated, truncated, info = super().step(action)
 
         if self.carrying:
             if self.carrying == self.target:
@@ -147,4 +209,16 @@ class CustomFetchEnv(CustomMiniGridEnv):
                 reward = 0
                 terminated = True
 
-        return obs, reward, terminated, truncated, info
+        return self.obs, reward, terminated, truncated, info
+
+    def step(self, action: ActType) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+        raise UserWarning("Should not be accessing shared environment directly")
+
+    def reset(self, *, seed=None, options=None):
+        self.obs, info = super().reset(seed=seed, options=options)
+        self.follower.reset() if self.follower else None
+        self.speaker.reset() if self.speaker else None
+
+        if self.render_mode == "human":
+            self.render()
+        return self.obs, info

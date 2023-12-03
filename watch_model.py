@@ -10,7 +10,8 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import VecFrameStack, VecEnv
 
-from envs.custom_fetch import CustomFetchEnv
+from envs.follower_env import FollowerEnv
+from envs.shared_env import SharedEnv
 from speaker.baseline_speaker import BaselineSpeaker
 from speaker.heuristic_speaker import HeuristicSpeaker
 from util.wrappers import apply_wrappers
@@ -121,7 +122,7 @@ if __name__ == '__main__':
     }
 
     test_kwargs = {**env_kwargs, "configs": test_config}
-    env = make_vec_env(CustomFetchEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=test_kwargs)
+    env = make_vec_env(FollowerEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=test_kwargs)
     if fs:
         env = VecFrameStack(env, n_stack=3)
 

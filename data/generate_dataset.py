@@ -3,7 +3,7 @@ import random
 import sys
 
 from data.stats_dataset import get_stats
-from envs.custom_fetch import CustomFetchEnv
+from envs.shared_env import SharedEnv
 from speaker.heuristic_speaker import HeuristicSpeaker
 
 
@@ -79,7 +79,7 @@ def generate_dataset(split: str,
                   'distractors': [{'color': distractor[0], 'type': distractor[1]} for distractor in distractors]}
         color_type_configs.append(config)
 
-    env = CustomFetchEnv(
+    env = SharedEnv(
         size=size,
         speaker=HeuristicSpeaker,
         configs=color_type_configs,

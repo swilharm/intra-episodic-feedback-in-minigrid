@@ -7,23 +7,23 @@ from minigrid.core.world_object import WorldObj
 from util.util import distance, angle_between
 
 if TYPE_CHECKING:
-    from envs.custom_env import CustomMiniGridEnv
+    from envs.shared_env import SharedEnv
 
 
 class Speaker(ABC):
     """Abstract base class. Child classes have to implement gen_feedback and list_possible_statements"""
 
-    def __init__(self, env: CustomMiniGridEnv):
-        self.env: CustomMiniGridEnv = env
+    def __init__(self, env: "SharedEnv"):
+        self.env: "SharedEnv" = env
+        self.steps_before_help: float = env.size / 4
+        self.time_before_help: float = env.size / 3
         self.position_last_spoken: Tuple[int, int] = (-1, -1)
         self.timestep_last_spoken: int = -1
 
     @abstractmethod
-    def gen_feedback(self, steps_before_help: int, time_before_help: int) -> str:
+    def predict(self) -> str:
         """
         Generates the feedback based on environment state.
-        :param steps_before_help: After how many steps walked the speaker should speak
-        :param time_before_help: After how much time the speaker should speak
         :return: Feedback as str
         """
         raise NotImplementedError
@@ -100,7 +100,7 @@ class Speaker(ABC):
     def possible_initial_missions(self) -> List[str]:
         """Generates all possible initial missions"""
         possible_statements = []
-        for combination in itertools.product(*self.env.initial_mission_placeholders()):
+        for combination in itertools.product(self.env.OBJ_COLORS, self.env.OBJ_TYPES):
             possible_statements.append(self.env.initial_mission_func(*combination))
         return possible_statements
 

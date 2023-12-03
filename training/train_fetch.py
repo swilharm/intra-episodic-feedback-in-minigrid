@@ -2,6 +2,7 @@ import json
 import sys
 from argparse import ArgumentParser
 from datetime import datetime
+from pathlib import Path
 
 import torch
 from sb3_contrib import RecurrentPPO
@@ -10,7 +11,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecFrameStack
 
-from envs.custom_fetch import CustomFetchEnv
+from envs.follower_env import FollowerEnv
 from feature_extraction.feature_extractor import CombinedFeaturesExtractor
 from speaker.baseline_speaker import BaselineSpeaker
 from speaker.heuristic_speaker import HeuristicSpeaker
@@ -52,9 +53,9 @@ else:
     env_kwargs['speaker'] = HeuristicSpeaker
 
 train_kwargs = {**env_kwargs, "configs": train}
-train_env = make_vec_env(CustomFetchEnv, n_envs=3, seed=150494, wrapper_class=apply_wrappers, env_kwargs=train_kwargs)
+train_env = make_vec_env(FollowerEnv, n_envs=3, seed=150494, wrapper_class=apply_wrappers, env_kwargs=train_kwargs)
 val_kwargs = {**env_kwargs, "configs": val}
-val_env = make_vec_env(CustomFetchEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=val_kwargs)
+val_env = make_vec_env(FollowerEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=val_kwargs)
 
 if args.frame_stacking:
     train_env = VecFrameStack(train_env, n_stack=3)
@@ -71,7 +72,7 @@ policy_kwargs = dict(
     },
 )
 
-torch.set_num_threads(1)
+# torch.set_num_threads(1)
 print(torch.cuda.is_available())
 if torch.cuda.is_available():
     torch.cuda.set_device(args.device)
@@ -80,7 +81,7 @@ if torch.cuda.is_available():
 if sys.platform == 'linux':
     log_path = "/cache/tensorboard-logdir/"
 else:
-    log_path = "~/logs/"
+    log_path = f"{Path.home()}/logs/"
 
 if args.model == 'ppo':
     model = PPO("MultiInputPolicy", train_env, policy_kwargs=policy_kwargs, verbose=0,

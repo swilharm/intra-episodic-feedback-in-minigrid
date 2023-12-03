@@ -11,7 +11,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.vec_env import VecFrameStack
 
-from envs.custom_fetch import CustomFetchEnv
+from envs.follower_env import FollowerEnv
 from speaker.baseline_speaker import BaselineSpeaker
 from speaker.heuristic_speaker import HeuristicSpeaker
 from util.callbacks import LogSuccessCallback
@@ -50,7 +50,7 @@ def eval_model(model_name: str, env_config: str, device: int = 0):
     }
 
     test_kwargs = {**env_kwargs, "configs": test_config}
-    test_env = make_vec_env(CustomFetchEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=test_kwargs)
+    test_env = make_vec_env(FollowerEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=test_kwargs)
     if fs:
         test_env = VecFrameStack(test_env, n_stack=3)
 

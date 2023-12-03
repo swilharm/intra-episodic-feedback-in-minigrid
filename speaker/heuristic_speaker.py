@@ -10,10 +10,10 @@ class HeuristicSpeaker(Speaker):
     """The HeuristicSpeaker follows a predefined ruleset what to say when.
     This serves as the training partner when only training a follower"""
 
-    def gen_feedback(self, steps_before_help: int, time_before_help: int) -> str:
+    def predict(self) -> str:
         if self.timestep_last_spoken == -1:
             feedback = self.initial_mission()
-        elif distance(self.position_last_spoken, self.env.agent_pos) >= steps_before_help:
+        elif distance(self.position_last_spoken, self.env.agent_pos) >= self.env.size/4:
             # move feedback
             obj_in_front = self.env.grid.get(*self.env.front_pos)
             if obj_in_front and not isinstance(obj_in_front, Wall):
@@ -22,7 +22,7 @@ class HeuristicSpeaker(Speaker):
             else:
                 # not looking at object, give direction feedback (yes/no)
                 feedback = self.movement_feedback()
-        elif self.env.step_count - self.timestep_last_spoken >= time_before_help:
+        elif self.env.step_count - self.timestep_last_spoken >= self.env.size/3:
             # wait feedback
             obj_in_front = self.env.grid.get(*self.env.front_pos)
             if obj_in_front and not isinstance(obj_in_front, Wall):

@@ -2,14 +2,14 @@ import json
 
 from minigrid.manual_control import ManualControl
 
-from envs.custom_fetch import CustomFetchEnv
+from envs.shared_env import SharedEnv
 from speaker.baseline_speaker import BaselineSpeaker
 from speaker.heuristic_speaker import HeuristicSpeaker
 
 with open('data/fetch_18x18_8d_test.json', 'r') as file:
     configs = json.load(file)
 
-env = CustomFetchEnv(
+env = SharedEnv(
     speaker=HeuristicSpeaker,
     configs=configs,
     size=18,
