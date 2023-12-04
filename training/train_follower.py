@@ -12,7 +12,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecFrameStack
 
 from envs.follower_env import FollowerEnv
-from feature_extraction.feature_extractor import CombinedFeaturesExtractor
+from feature_extraction.feature_extractor import FollowerFeaturesExtractor
 from speaker.baseline_speaker import BaselineSpeaker
 from speaker.heuristic_speaker import HeuristicSpeaker
 from util.callbacks import LogSuccessCallback
@@ -35,7 +35,7 @@ args = arg_parser.parse_args()
 name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 name += f"_{args.model}"
 name += f"_fs" if args.frame_stacking else ""
-name += f"_fetch_12x12_5d_{args.speaker}"
+name += f"_follower_12x12_5d_{args.speaker}"
 name = name.lower()
 print(name)
 
@@ -62,12 +62,13 @@ if args.frame_stacking:
     val_env = VecFrameStack(val_env, n_stack=3)
 
 policy_kwargs = dict(
-    features_extractor_class=CombinedFeaturesExtractor,
+    features_extractor_class=FollowerFeaturesExtractor,
     features_extractor_kwargs={
         "vision_dim": 128,
         "embedding_dim": 128,
         "language_dim": 128,
         "direction_dim": 128,
+        "target_dim": 128,
         "film_dim": 128,
     },
 )

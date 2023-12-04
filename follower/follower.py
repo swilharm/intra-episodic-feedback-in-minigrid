@@ -9,6 +9,7 @@ class Follower:
 
     def __init__(self, env: "SharedEnv"):
         self.env: "SharedEnv" = env
+        self.plan = []
         pass
 
     @abstractmethod
@@ -21,4 +22,4 @@ class Follower:
 
     def reset(self):
         """Resets the follower for a new instance"""
-        pass
+        self.plan = []

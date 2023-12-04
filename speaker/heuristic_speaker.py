@@ -44,8 +44,8 @@ class HeuristicSpeaker(Speaker):
         possible_statements = self.possible_initial_missions()
         for obj_color in self.env.OBJ_COLORS:
             for obj_type in self.env.OBJ_TYPES:
-                possible_statements.append(f"yes this {obj_color} {obj_type}")
-                possible_statements.append(f"not this {obj_color} {obj_type}")
+                possible_statements.append(f"yes the {obj_color} {obj_type}")
+                possible_statements.append(f"not the {obj_color} {obj_type}")
                 possible_statements.append(f"the {obj_color} {obj_type}")
         possible_statements.append("yes this way")
         possible_statements.append("not this way")

@@ -1,7 +1,10 @@
 from abc import abstractmethod
 from typing import Iterable, Tuple, Type, List, SupportsFloat, Any
 
+import numpy as np
+from gymnasium import spaces
 from gymnasium.core import ActType, ObsType
+from gymnasium.spaces import Box
 from minigrid.core.constants import COLOR_NAMES
 from minigrid.core.grid import Grid
 from minigrid.core.mission import MissionSpace
@@ -9,6 +12,7 @@ from minigrid.core.world_object import WorldObj, Key, Ball, Wall
 from minigrid.minigrid_env import MiniGridEnv
 
 from follower.follower import Follower
+from speaker.heuristic_speaker import HeuristicSpeaker
 from speaker.speaker import Speaker
 
 
@@ -52,9 +56,12 @@ class SharedEnv(MiniGridEnv):
         self.initial_mission = ""
         self.obs = None
 
+        possible_statements = self.speaker.list_possible_statements() if self.speaker \
+            else HeuristicSpeaker(self).list_possible_statements()
+
         mission_space = MissionSpace(
             mission_func=lambda mission: mission,
-            ordered_placeholders=[self.speaker.list_possible_statements()]
+            ordered_placeholders=[possible_statements]
         )
         super().__init__(mission_space=mission_space,
                          grid_size=size,
@@ -62,6 +69,9 @@ class SharedEnv(MiniGridEnv):
                          see_through_walls=True,
                          **kwargs
                          )
+
+        target_space = spaces.Box(low=1, high=size-2, shape=(2,), dtype=np.int8)
+        self.observation_space = spaces.Dict({**self.observation_space, "target": target_space})
 
     def initial_mission_func(self, color, obj_type) -> str:
         return f"get the {color} {obj_type}"
@@ -181,6 +191,11 @@ class SharedEnv(MiniGridEnv):
                         and type(self.grid.get(x, y)) != Wall:
                     return True
         return False
+
+    def gen_obs(self):
+        """Adds target coordinates to observations"""
+        obs = super().gen_obs()
+        return {**obs, "target": self.target.cur_pos}
 
     def make_follower_act(self) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         assert self.follower is not None, "Can not query follower if self.follower is None"

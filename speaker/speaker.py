@@ -80,9 +80,9 @@ class Speaker(ABC):
         Includes a description of the object in front of the agent to facilitate learning types and colors."""
         self.remember_pos_time()
         if obj_in_front == self.env.target:
-            return f"yes this {obj_in_front.color} {obj_in_front.type}"
+            return f"yes the {obj_in_front.color} {obj_in_front.type}"
         elif obj_in_front in self.env.distractors:
-            return f"not this {obj_in_front.color} {obj_in_front.type}"
+            return f"not the {obj_in_front.color} {obj_in_front.type}"
         raise ValueError(f"{obj_in_front} is neither target nor distractor."
                          f"This function was likely erroneously called when no object was in front.")
 

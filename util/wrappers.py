@@ -60,7 +60,7 @@ class LanguageWrapper(ObservationWrapper):
 
     def __init__(self, env: Env):
         super().__init__(env)
-        possible_feedback = env.unwrapped.speaker.list_possible_statements()
+        possible_feedback = env.unwrapped.observation_space.spaces['mission'].ordered_placeholders[0]
         self.vocab = sorted({token for feedback in possible_feedback for token in feedback.split()})
         self.max_len = len(max([feedback.split() for feedback in possible_feedback], key=lambda x: len(x)))
 

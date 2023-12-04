@@ -16,15 +16,17 @@ class FollowerEnv(Env):
         self.env.make_speaker_act()
         return self.env.obs, reward, terminated, truncated, info
 
-    def reset(
-            self,
-            *,
-            seed: int | None = None,
-            options: dict[str, Any] | None = None,
-    ) -> tuple[ObsType, dict[str, Any]]:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None, ) \
+            -> tuple[ObsType, dict[str, Any]]:
         obs, info = self.env.reset()
         self.env.make_speaker_act()
         return self.env.obs, info
+
+    def render(self) -> RenderFrame | list[RenderFrame] | None:
+        return self.env.render()
+
+    def close(self):
+        self.env.close()
 
     def __getattr__(self, attr):
         if attr not in self.__dict__:
