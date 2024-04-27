@@ -21,17 +21,17 @@ from speaker.heuristic_speaker import HeuristicSpeaker
 from util.callbacks import LogSuccessCallback
 from util.wrappers import apply_wrappers
 
-with open('data/fetch_12x12_5d_train.json', 'r') as file:
+with open('data/fetch_9x9_4d_train.json', 'r') as file:
     train = json.load(file)
 
-with open('data/fetch_12x12_5d_val.json', 'r') as file:
+with open('data/fetch_9x9_4d_val.json', 'r') as file:
     val = json.load(file)
 
 arg_parser = ArgumentParser()
 arg_parser.add_argument('--model', '-m', required=True, choices=['ppo', 'rppo'])
 arg_parser.add_argument('--frame-stacking', '-fs', action='store_true')
 arg_parser.add_argument('--partial', '-p', action='store_true')
-arg_parser.add_argument('--nsteps', '-n', required=False, default=10_000_000, type=int)
+arg_parser.add_argument('--nsteps', '-n', required=False, default=5_000_000, type=int)
 arg_parser.add_argument('--device', '-d', required=False, default=0, type=int)
 args = arg_parser.parse_args()
 
@@ -40,12 +40,12 @@ name += f"_{args.model}"
 name += f"_fs" if args.frame_stacking else ""
 name += f"_speaker"
 name += f"_partial" if args.partial else ""
-name += f"_12x12_5d"
+name += f"_9x9_4d"
 name = name.lower()
 print(name)
 
 env_kwargs = {
-    "size": 12,
+    "size": 9,
     'follower': HeuristicFollower,
     "render_mode": "rgb_array",
     "tile_size": 8,
@@ -55,7 +55,7 @@ env_kwargs = {
 }
 
 train_kwargs = {**env_kwargs, "configs": train}
-train_env = make_vec_env(SpeakerEnv, n_envs=3, seed=150494, wrapper_class=apply_wrappers, env_kwargs=train_kwargs)
+train_env = make_vec_env(SpeakerEnv, n_envs=10, seed=150494, wrapper_class=apply_wrappers, env_kwargs=train_kwargs)
 val_kwargs = {**env_kwargs, "configs": val}
 val_env = make_vec_env(SpeakerEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=val_kwargs)
 
@@ -84,7 +84,6 @@ else:
 print(torch.cuda.is_available())
 if torch.cuda.is_available():
     torch.cuda.set_device(args.device)
-    torch.cuda.set_per_process_memory_fraction(0.5, args.device)
 
 if sys.platform == 'linux':
     log_path = "/cache/tensorboard-logdir/"

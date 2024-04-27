@@ -51,7 +51,7 @@ class FollowerFeaturesExtractor(BaseFeaturesExtractor):
         self.film_norm = nn.LayerNorm(kwargs['film_dim'])
 
     def forward(self, observations: torch.Tensor):
-        # show_frames(observations, view='image')
+        show_frames(observations, view='image')
         vision_embeddings = self.vision(observations['image'])
         language_embeddings = self.language(observations['mission'])
         direction_embeddings = self.direction(observations['direction'])
@@ -80,7 +80,7 @@ class SpeakerWithoutPartialFeaturesExtractor(BaseFeaturesExtractor):
                                     nn.LayerNorm(kwargs["target_dim"]))
 
     def forward(self, observations: torch.Tensor):
-        # show_frames(observations, view='overview_highlighted')
+        show_frames(observations, view='overview_highlighted')
         vision_embeddings = self.vision(observations['overview_highlighted'])
         vision_embeddings = self.vision_pool(vision_embeddings)
         vision_embeddings = vision_embeddings.reshape(vision_embeddings.shape[0], -1)
@@ -107,8 +107,8 @@ class SpeakerWithPartialFeaturesExtractor(BaseFeaturesExtractor):
                                     nn.LayerNorm(kwargs["target_dim"]))
 
     def forward(self, observations: torch.Tensor):
-        # show_frames(observations, view='overview')
-        # show_frames(observations, view='image')
+        show_frames(observations, view='overview')
+        show_frames(observations, view='image')
         overview_embeddings = self.overview(observations['overview'])
         overview_embeddings = self.vision_pool(overview_embeddings)
         overview_embeddings = overview_embeddings.reshape(overview_embeddings.shape[0], -1)

@@ -13,7 +13,7 @@ I2W = dict()
 
 
 def apply_wrappers(env) -> Env:
-    """Applies all three wrappers in order and returns resulting environment"""
+    """Applies all wrappers in order and returns resulting environment"""
     global W2I, I2W
     env = VisionWrapper(env)
     env = LanguageWrapper(env)
@@ -78,7 +78,6 @@ class LanguageWrapper(ObservationWrapper):
             new_mission.append(self.w2i[token])
         while len(new_mission) < self.max_len:
             new_mission.append(0)
-
         return {**obs, "mission": new_mission}
 
 
@@ -87,7 +86,6 @@ class DirectionWrapper(ObservationWrapper):
 
     def __init__(self, env: Env):
         super().__init__(env)
-        direction = env.observation_space.spaces['direction']
         new_space = spaces.Box(low=0, high=3, shape=(1,), dtype=np.int8)
         env.observation_space = spaces.Dict({**env.observation_space.spaces, "direction": new_space})
 

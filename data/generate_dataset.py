@@ -28,25 +28,27 @@ def generate_dataset(split: str,
 
     # seed = {train: 2, val: 3, test: 5, test_ambig: 7, test_holdout: 11} * size * num_distractors
     if train:
-        random.seed(2 * size * num_distractors)
+        random.seed(2 + size * num_distractors)
     elif val:
-        random.seed(3 * size * num_distractors)
+        random.seed(3 + size * num_distractors)
     elif test:
         if ambiguity:
-            random.seed(7 * size * num_distractors)
+            random.seed(7 + size * num_distractors)
         elif holdouts:
-            random.seed(11 * size * num_distractors)
+            random.seed(11 + size * num_distractors)
         else:
-            random.seed(5 * size * num_distractors)
+            random.seed(5 + size * num_distractors)
 
     color_types = [('yellow', 'ball'), ('red', 'ball'), ('green', 'ball'), ('blue', 'ball'),
                    ('purple', 'key'), ('red', 'key'), ('green', 'key'), ('grey', 'key')]
     if holdouts:
-        color_types.extend([('yellow', 'key'), ('blue', 'key'), ('purple', 'ball'), ('grey', 'ball')])
+        color_types = [('yellow', 'key'), ('blue', 'key'), ('purple', 'ball'), ('grey', 'ball')]
 
     # instances_per_object = {train: 1250, val: 50, test: 50}
     if train:
         instances_per_object = 1250
+    elif holdouts:
+        instances_per_object = 100
     else:
         instances_per_object = 50
 
@@ -117,8 +119,8 @@ def generate_dataset(split: str,
     targets, distractors, ambiguities = get_stats(full_configs)
     print(f"dataset: {file_name}")
     print(f"num instances: {len(full_configs)}")
-    print(f"targets: {targets}")
-    print(f"distractors: {distractors}")
+    print(f"targets: {sorted(targets)}")
+    print(f"distractors: {sorted(distractors)}")
     print(f"ambiguities: {ambiguities}")
     print()
 
@@ -127,15 +129,9 @@ if __name__ == "__main__":
     print()
 
     generate_dataset('test', 6, 2)
-    generate_dataset('test', 6, 2, ambiguity=True)
-    generate_dataset('test', 6, 2, holdouts=True)
-
-    generate_dataset('train', 12, 5)
-    generate_dataset('val', 12, 5)
-    generate_dataset('test', 12, 5)
-    generate_dataset('test', 12, 5, ambiguity=True)
-    generate_dataset('test', 12, 5, holdouts=True)
-
-    generate_dataset('test', 18, 8)
-    generate_dataset('test', 18, 8, ambiguity=True)
-    generate_dataset('test', 18, 8, holdouts=True)
+    generate_dataset('train', 9, 4)
+    generate_dataset('val', 9, 4)
+    generate_dataset('test', 9, 4)
+    generate_dataset('test', 9, 4, ambiguity=True)
+    generate_dataset('test', 9, 4, holdouts=True)
+    generate_dataset('test', 12, 6)
