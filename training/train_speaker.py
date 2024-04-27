@@ -84,6 +84,7 @@ else:
 print(torch.cuda.is_available())
 if torch.cuda.is_available():
     torch.cuda.set_device(args.device)
+    torch.cuda.set_per_process_memory_fraction(0.5, args.device)
 
 if sys.platform == 'linux':
     log_path = "/cache/tensorboard-logdir/"
