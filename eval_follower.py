@@ -73,15 +73,22 @@ def eval_model(model_path: Path, model_type: str, frame_stacking: bool, speaker:
     return mean_reward, mean_epl, success_rate, detailed_results
 
 
+models = [
+    ('20240427_230954_ppo_follower_9x9_4d_baseline', 'ppo', False, BaselineSpeaker),
+    ('20240427_231125_ppo_follower_9x9_4d_heuristic', 'ppo', False, HeuristicSpeaker),
+    ('20240427_231907_ppo_fs_follower_9x9_4d_heuristic', 'ppo', True, HeuristicSpeaker)
+]
+
 if __name__ == '__main__':
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        model_name = '20240427_230954_ppo_follower_9x9_4d_baseline'
-        model_path = (Path('~') / "checkpoints" / model_name / "best_model").expanduser()
-        model_type, frame_stacking, speaker = "ppo", False, BaselineSpeaker
-        for env_config in Path('data').glob('*test*.json'):
-            mean_reward, mean_epl, success_rate, detailed_results = eval_model(model_path, model_type, frame_stacking, speaker,
-                                                                               env_config, int(re.search(r'(\d+)x\1', str(env_config))[1]), 0)
-            print(f"model: {model_name}, env: {env_config}")
-            print(f"mean reward: {mean_reward:.4f}, mean_epl: {mean_epl:.4f}, success_rate: {success_rate:.4f}")
-            print(f"----------------------------------------------------")
+        for model_name, model_type, frame_stacking, speaker in models:
+            model_path = (Path('~') / "checkpoints" / model_name / "best_model").expanduser()
+            for env_config in Path('data').glob('*test*.json'):
+                mean_reward, mean_epl, success_rate, detailed_results = eval_model(model_path, model_type,
+                                                                                   frame_stacking, speaker,
+                                                                                   env_config, int(
+                        re.search(r'(\d+)x\1', str(env_config))[1]), 0)
+                print(f"model: {model_name}, env: {env_config}")
+                print(f"mean reward: {mean_reward:.4f}, mean_epl: {mean_epl:.4f}, success_rate: {success_rate:.4f}")
+                print(f"----------------------------------------------------")
