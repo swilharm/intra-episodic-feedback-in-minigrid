@@ -7,13 +7,13 @@ from envs.shared_env import SharedEnv
 from speaker.baseline_speaker import BaselineSpeaker
 from speaker.heuristic_speaker import HeuristicSpeaker
 
-with open('data/fetch_6x6_2d_test.json', 'r') as file:
+with open('data/fetch_9x9_4d_test_ambig.json', 'r') as file:
     configs = json.load(file)
 
 env: FollowerEnv = FollowerEnv(
     speaker=HeuristicSpeaker,
     configs=configs,
-    size=6,
+    size=9,
     render_mode="human",
     tile_size=64,
     # highlight=False,

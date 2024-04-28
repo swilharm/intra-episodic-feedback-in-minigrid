@@ -1,33 +1,30 @@
-from typing import List
-
+import gymnasium
 import torch
 import torch.nn as nn
-import gymnasium
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from matplotlib import pyplot as plt
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 from feature_extraction.film import FiLM
 
 
 def show_frames(observations: torch.Tensor, view: str = "image"):
     """Displays the stacked observations with pyplot"""
-    from util.wrappers import W2I, I2W
+    from util.wrappers import I2W
     I2W[0] = ''
-    fig, axs = plt.subplots(1, 3)
-    fig: Figure
-    axs: List[Axes]
-    ml = int(observations['mission'].shape[1]/3)
-    plt.sca(ax=axs[0])
-    plt.gca().set_title(' '.join((I2W[int(idx)] for idx in observations['mission'][0][0:ml])).strip())
-    plt.imshow(torch.permute(observations[view][0][0:3], (1, 2, 0)))
-    plt.sca(ax=axs[1])
-    plt.gca().set_title(' '.join((I2W[int(idx)] for idx in observations['mission'][0][ml:2*ml])).strip())
-    plt.imshow(torch.permute(observations[view][0][3:6], (1, 2, 0)))
-    plt.sca(ax=axs[2])
-    plt.gca().set_title(' '.join((I2W[int(idx)] for idx in observations['mission'][0][2*ml:3*ml])).strip())
-    plt.imshow(torch.permute(observations[view][0][6:9], (1, 2, 0)))
+
+    num_frames = observations['direction'].shape[0]
+
+    fig, axs = plt.subplots(1, num_frames)
+    if not isinstance(axs, list):
+        axs = [axs]
+    ml = int(observations['mission'].shape[1] / num_frames)
+
+    for i in range(num_frames):
+        plt.sca(ax=axs[i])
+        plt.gca().set_title(
+            ' '.join((I2W[int(idx)] for idx in observations['mission'][0][ml * i:ml * (i + 1)])).strip())
+        plt.imshow(torch.permute(observations[view][0][3 * i:3 * (i + 1)], (1, 2, 0)))
+
     fig.tight_layout()
     plt.show()
 
