@@ -80,11 +80,10 @@ else:
     policy_kwargs["features_extractor_class"] = SpeakerWithoutPartialFeaturesExtractor
 
 
-# torch.set_num_threads(1)
+torch.set_num_threads(1)
 print(torch.cuda.is_available())
 if torch.cuda.is_available():
     torch.cuda.set_device(args.device)
-    torch.cuda.set_per_process_memory_fraction(0.5, args.device)
 
 if sys.platform == 'linux':
     log_path = "/cache/tensorboard-logdir/"
@@ -110,6 +109,9 @@ evaluation_callback = EvalCallback(eval_env=val_env, n_eval_episodes=len(val), e
                                    log_path=f"../evals/{name}/",
                                    best_model_save_path=f"../checkpoints/{name}/",
                                    )
-
-model.learn(args.nsteps, tb_log_name=name, callback=[log_callback, evaluation_callback], progress_bar=True)
+try:
+    model.learn(args.nsteps, tb_log_name=name, callback=[log_callback, evaluation_callback], progress_bar=True)
+except KeyboardInterrupt as e:
+    model.save(f"../checkpoints/{name}/interrupt.zip")
+    raise e
 model.save(f"../final/{name}.zip")
