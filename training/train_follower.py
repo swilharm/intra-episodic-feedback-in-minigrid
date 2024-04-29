@@ -98,7 +98,7 @@ else:
                          )
 
 log_callback = LogSuccessCallback()
-evaluation_callback = EvalCallback(eval_env=val_env, n_eval_episodes=len(val), eval_freq=500_000,
+evaluation_callback = EvalCallback(eval_env=val_env, n_eval_episodes=len(val), eval_freq=50_000,
                                    log_path=f"../evals/{name}/",
                                    best_model_save_path=f"../checkpoints/{name}/",
                                    )
