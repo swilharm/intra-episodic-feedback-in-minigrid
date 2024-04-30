@@ -78,9 +78,9 @@ models = [
 if __name__ == '__main__':
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        for model_name, model_type, frame_stacking in models:
+        for model_name, model_type, partial, frame_stacking in models:
             model_path = (Path('~') / "checkpoints" / model_name / "best_model").expanduser()
-            for env_config in Path('../data').glob('*test*.json'):
+            for env_config in Path('data').glob('*test*.json'):
                 mean_reward, mean_epl, success_rate, detailed_results = eval_speaker(
                     model_path, model_type, frame_stacking, env_config,
                     int(re.search(r'(\d+)x\1', str(env_config))[1]))

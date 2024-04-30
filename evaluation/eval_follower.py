@@ -83,7 +83,7 @@ if __name__ == '__main__':
         warnings.simplefilter("ignore")
         for model_name, model_type, frame_stacking, speaker in models:
             model_path = (Path('~') / "checkpoints" / model_name / "best_model").expanduser()
-            for env_config in Path('../data').glob('*test*.json'):
+            for env_config in Path('data').glob('*test*.json'):
                 mean_reward, mean_epl, success_rate, detailed_results = eval_follower(model_path, model_type,
                                                                                       frame_stacking, speaker,
                                                                                       env_config, int(
