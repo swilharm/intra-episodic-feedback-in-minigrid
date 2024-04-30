@@ -9,6 +9,7 @@ from envs.shared_env import SharedEnv
 class FollowerEnv(Env):
 
     def __init__(self, **kwargs):
+        self.render_mode = kwargs.get("render_mode", "rgb_array")
         self.env = SharedEnv(**kwargs)
 
     def step(self, action: ActType) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:

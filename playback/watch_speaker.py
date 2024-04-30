@@ -1,9 +1,9 @@
 import json
-import re
+import warnings
+from pathlib import Path
 
 import pygame
 from minigrid.core.actions import Actions
-from minigrid.minigrid_env import MiniGridEnv
 from sb3_contrib import RecurrentPPO
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
@@ -11,7 +11,8 @@ from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import VecFrameStack, VecEnv
 
 from envs.follower_env import FollowerEnv
-from envs.shared_env import SharedEnv
+from envs.speaker_env import SpeakerEnv
+from follower.heuristic_follower import HeuristicFollower
 from speaker.baseline_speaker import BaselineSpeaker
 from speaker.heuristic_speaker import HeuristicSpeaker
 from util.wrappers import apply_wrappers
@@ -54,7 +55,6 @@ class WatchModel:
 
     def key_handler(self, event):
         key: str = event.key
-        print("pressed", key)
 
         if key == "escape":
             self.closed = True
@@ -65,72 +65,45 @@ class WatchModel:
             return
         if key == "space":
             actions, _ = self.model.predict(self.obs, deterministic=True)
-            print(f"Model decided action {actions[0]}: {Actions(actions[0]).name}")
+            print(f"Model decided action {actions[0]}: {self.env.envs[0].actions(actions[0]).name}")
             self.step(actions)
             return
-
-        key_to_action = {
-            "left": Actions.left,
-            "right": Actions.right,
-            "up": Actions.forward,
-            "tab": Actions.pickup,
-            "left shift": Actions.drop,
-            "enter": Actions.done,
-        }
-        if key in key_to_action.keys():
-            action = key_to_action[key]
-            self.step([action])
         else:
             print(key)
 
 
 if __name__ == '__main__':
-    env_config = 'data/fetch_12x12_5d_test.json'
-    model_name = '20231029_161129_PPO_fs_fetch_12x12_5d_baseline'
 
-    with open(env_config, 'r') as file:
-        test_config = json.load(file)
+    model_name = '20240427_231410_ppo_speaker_9x9_4d'
+    model_path = (Path('~') / "checkpoints" / model_name / "best_model").expanduser()
+    model_type, partial, frame_stacking, follower = 'ppo', False, False, HeuristicFollower
+    env = Path('../data') / 'fetch_9x9_4d_test.json'
+    env_size = 9
 
-    match = re.match(r"(?:.*?/)?([^_]+?)_(\d+)x(\d+)_(\d+)d_([^_]+)(?:.json)?", env_config.lower())
-    if match:
-        env_type = match[1]
-        env_size = int(match[2])
-    else:
-        raise ValueError(f"Cannot parse env config {env_config}")
-
-    match = re.match(r"(?:\d{8}_\d{6}_)([^_]+?)(?:_(fs))?_([^_]+?)_(\d+)x(\d+)_(\d+)d_([^_]+)", model_name.lower())
-    if match:
-        model_type = match[1]
-        fs = match[2]
-        speaker_type = match[7]
-    else:
-        raise ValueError(f"Cannot parse model name {model_name}")
-
-    if speaker_type == "baseline":
-        speaker = BaselineSpeaker
-    elif speaker_type == "heuristic":
-        speaker = HeuristicSpeaker
-    else:
-        raise ValueError(f"Speaker could not be determined from {speaker_type}.")
+    test_config = json.loads(env.read_text("utf-8"))
 
     env_kwargs = {
+        "configs": test_config,
         "size": env_size,
-        "speaker": speaker,
+        "follower": follower,
         "render_mode": "human",
         "tile_size": 64,
+        "highlight": True,
+        "agent_pov": False,
         "agent_view_size": 3,
     }
-
-    test_kwargs = {**env_kwargs, "configs": test_config}
-    env = make_vec_env(FollowerEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers, env_kwargs=test_kwargs)
-    if fs:
-        env = VecFrameStack(env, n_stack=3)
+    test_env = make_vec_env(SpeakerEnv, n_envs=1, seed=150494, wrapper_class=apply_wrappers,
+                            env_kwargs=env_kwargs)
+    if frame_stacking:
+        test_env = VecFrameStack(test_env, n_stack=3)
 
     if model_type == "ppo":
-        model = PPO.load(f"../checkpoints/{model_name}/best_model.zip", env=None)
+        model = PPO.load(model_path, env=None)
     elif model_type == "rppo":
-        model = RecurrentPPO.load(f"../checkpoints/{model_name}/best_model.zip", env=None)
+        model = RecurrentPPO.load(model_path, env=None)
     else:
         raise ValueError(f"Model type could not be determined from {model_type}.")
 
-    WatchModel(model, env).start()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        WatchModel(model, test_env).start()

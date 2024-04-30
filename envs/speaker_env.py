@@ -11,6 +11,7 @@ from speaker.heuristic_speaker import HeuristicSpeaker
 class SpeakerEnv(Env):
 
     def __init__(self, **kwargs):
+        self.render_mode = kwargs.get("render_mode", "rgb_array")
         self.env = SharedEnv(**kwargs)
         all_possible_statements = HeuristicSpeaker(self.env).list_possible_statements() + ["_"]
         self.actions = IntEnum('SpeakerActions',
