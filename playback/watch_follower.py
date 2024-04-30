@@ -72,10 +72,10 @@ class WatchModel:
 
 if __name__ == '__main__':
 
-    model_name = '20240427_231125_ppo_follower_9x9_4d_heuristic'
+    model_name = '20240429_213324_ppo_fs_follower_9x9_4d_heuristic'
     model_path = (Path('~') / "checkpoints" / model_name / "best_model").expanduser()
-    model_type, frame_stacking, speaker = 'ppo', False, HeuristicSpeaker
-    env = Path('../data') / 'fetch_9x9_4d_test.json'
+    model_type, frame_stacking, speaker = 'ppo', True, HeuristicSpeaker
+    env = Path('data') / 'fetch_9x9_4d_test.json'
     env_size = 9
 
     test_config = json.loads(env.read_text("utf-8"))

@@ -70,7 +70,7 @@ def eval_speaker(model_path: Path, model_type: str, frame_stacking: bool,
 
 models = [
     ('20240427_231410_ppo_speaker_9x9_4d', 'ppo', False, False),
-    ('20240429_213310_ppo_speaker_partial_9x9_4d', 'ppo', True, False),
+    ('20240429_213349_ppo_speaker_partial_9x9_4d', 'ppo', True, False),
     ('20240429_213404_ppo_fs_speaker_9x9_4d', 'ppo', False, True),
     ('20240429_213421_ppo_fs_speaker_partial_9x9_4d', 'ppo', True, True)
 ]

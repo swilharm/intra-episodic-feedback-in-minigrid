@@ -77,7 +77,7 @@ if __name__ == '__main__':
     model_name = '20240427_231410_ppo_speaker_9x9_4d'
     model_path = (Path('~') / "checkpoints" / model_name / "best_model").expanduser()
     model_type, partial, frame_stacking, follower = 'ppo', False, False, HeuristicFollower
-    env = Path('../data') / 'fetch_9x9_4d_test.json'
+    env = Path('data') / 'fetch_9x9_4d_test.json'
     env_size = 9
 
     test_config = json.loads(env.read_text("utf-8"))
